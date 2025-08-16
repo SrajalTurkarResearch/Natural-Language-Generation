@@ -1,0 +1,5 @@
+city,temperature,condition,humidity
+    London,25.6,Sunny,60
+    New York,18.2,Cloudy,75
+    Tokyo,30.1,Rainy,80
+    Invalid,-999,Storm,150

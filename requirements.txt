@@ -1,0 +1,37 @@
+# Core Python libraries for NLG projects and tutorials
+
+# Jupyter for interactive notebooks
+notebook
+jupyter
+
+# NLP preprocessing and utilities
+nltk
+spacy
+
+# Deep learning frameworks
+torch
+tensorflow
+
+# Hugging Face Transformers and Datasets for modern NLG
+transformers
+datasets
+
+# Evaluation metrics
+nlg-eval
+sacrebleu
+rouge-score
+
+# Data manipulation and visualization
+pandas
+numpy
+matplotlib
+seaborn
+
+# Optional: sentencepiece for tokenization (used by some transformer models)
+sentencepiece
+
+# Optional: tqdm for progress bars
+tqdm
+
+# Optional: scikit-learn for additional utilities
+scikit-learn
