@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text Evaluation Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/he@1.2.0/he.min.js"></script>
+    <script>
+      // Fallback for jQuery
+      window.jQuery ||
+        document.write('<script src="/static/jquery-3.7.1.min.js"><\/script>');
+    </script>
+  </head>
+  <body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+      <h1 class="text-2xl font-bold mb-4">Text Evaluation Dashboard</h1>
+      <div class="mb-4">
+        <label for="generated_text" class="block text-sm font-medium"
+          >Generated Text</label
+        >
+        <textarea
+          id="generated_text"
+          aria-label="Generated text input"
+          class="w-full p-2 border rounded"
+          rows="4"
+        ></textarea>
+      </div>
+      <div class="mb-4">
+        <label for="reference_text" class="block text-sm font-medium"
+          >Reference Text</label
+        >
+        <textarea
+          id="reference_text"
+          aria-label="Reference text input"
+          class="w-full p-2 border rounded"
+          rows="4"
+        ></textarea>
+      </div>
+      <button
+        id="evaluate"
+        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition disabled:bg-blue-300"
+      >
+        Evaluate
+      </button>
+      <div id="results" class="mt-4"></div>
+      <div class="mt-6">
+        <h2 class="text-xl font-semibold">Human Feedback</h2>
+        <div class="mb-4">
+          <label for="flag_type" class="block text-sm font-medium"
+            >Flag Type</label
+          >
+          <select
+            id="flag_type"
+            class="w-full p-2 border rounded"
+            aria-label="Flag type selection"
+          >
+            <option value="factual_error">Factual Error</option>
+            <option value="incoherence">Incoherence</option>
+            <option value="off_topic">Off Topic</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="comment" class="block text-sm font-medium">Comment</label>
+          <textarea
+            id="comment"
+            aria-label="Feedback comment input"
+            class="w-full p-2 border rounded"
+            rows="2"
+          ></textarea>
+        </div>
+        <button
+          id="submit_flag"
+          class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition disabled:bg-green-300"
+        >
+          Submit Flag
+        </button>
+      </div>
+      <div id="feedback_list" class="mt-4"></div>
+    </div>
+    <script>
+      // Map flag values to display text
+      const flagDisplayMap = {
+        factual_error: "Factual Error",
+        incoherence: "Incoherence",
+        off_topic: "Off Topic",
+      };
+
+      // Robust HTML escaping
+      function escapeHtml(text) {
+        return he.encode(String(text));
+      }
+
+      $("#evaluate").click(function () {
+        const generatedText = $("#generated_text").val().trim();
+        const referenceText = $("#reference_text").val().trim();
+
+        if (!generatedText || !referenceText) {
+          $("#results").html(
+            '<p class="text-red-600">Please provide both generated and reference text.</p>'
+          );
+          return;
+        }
+        if (generatedText.length < 3 || referenceText.length < 3) {
+          $("#results").html(
+            '<p class="text-red-600">Inputs must be at least 3 characters long.</p>'
+          );
+          return;
+        }
+
+        $("#evaluate").prop("disabled", true).text("Evaluating...");
+        $("#results").html('<p class="text-gray-600">Loading metrics...</p>');
+
+        $.ajax({
+          url: "/evaluate",
+          method: "POST",
+          data: {
+            generated_text: generatedText,
+            reference_text: referenceText,
+          },
+          success: function (data) {
+            let html = '<h2 class="text-xl font-semibold">Metrics</h2>';
+            if (data.metrics && typeof data.metrics === "object") {
+              for (let [key, value] of Object.entries(data.metrics)) {
+                html += `<p><strong>${escapeHtml(key)}:</strong> ${escapeHtml(
+                  value
+                )}</p>`;
+              }
+            } else {
+              html += '<p class="text-red-600">No metrics available.</p>';
+            }
+            $("#results").html(html);
+            // Refresh feedback list
+            $("#feedback_list").empty();
+            if (Array.isArray(data.feedback) && data.feedback.length > 0) {
+              data.feedback.forEach((f) => {
+                $("#feedback_list").append(
+                  `<p><strong>${escapeHtml(
+                    flagDisplayMap[f.flag] || f.flag
+                  )}:</strong> ${escapeHtml(f.comment)}</p>`
+                );
+              });
+            } else {
+              $("#feedback_list").append("<p>No feedback available.</p>");
+            }
+            $("#evaluate").prop("disabled", false).text("Evaluate");
+          },
+          error: function (xhr) {
+            $("#results").html(
+              `<p class="text-red-600">Failed to evaluate: ${escapeHtml(
+                xhr.statusText
+              )}</p>`
+            );
+            $("#evaluate").prop("disabled", false).text("Evaluate");
+          },
+        });
+      });
+
+      $("#submit_flag").click(function () {
+        const generatedText = $("#generated_text").val().trim();
+        const flagType = $("#flag_type").val();
+        const comment = $("#comment").val().trim();
+
+        if (!generatedText) {
+          $("#feedback_list").html(
+            '<p class="text-red-600">Please enter the generated text before submitting feedback.</p>'
+          );
+          return;
+        }
+        if (!comment) {
+          $("#feedback_list").html(
+            '<p class="text-red-600">Please enter a comment for your feedback.</p>'
+          );
+          return;
+        }
+
+        $("#submit_flag").prop("disabled", true).text("Submitting...");
+        $.ajax({
+          url: "/flag",
+          method: "POST",
+          data: {
+            text: generatedText,
+            flag: flagType,
+            comment: comment,
+          },
+          success: function (data) {
+            $("#feedback_list").append(
+              `<p><strong>${escapeHtml(
+                flagDisplayMap[flagType]
+              )}</strong>: ${escapeHtml(comment)}</p>`
+            );
+            $("#comment").val("");
+            $("#submit_flag").prop("disabled", false).text("Submit Flag");
+          },
+          error: function (xhr) {
+            $("#feedback_list").html(
+              `<p class="text-red-600">Failed to submit feedback: ${escapeHtml(
+                xhr.statusText
+              )}</p>`
+            );
+            $("#submit_flag").prop("disabled", false).text("Submit Flag");
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
