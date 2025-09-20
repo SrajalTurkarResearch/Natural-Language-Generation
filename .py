@@ -2,7 +2,7 @@ import os
 import re
 
 # Set your main module folder containing subfolders
-module_folder = "codes"
+module_folder = "C:\Users\Rishu\OneDrive\Desktop\Computer_Science\Computer_Science\Artificial Intelligence (AI)\Natural Language Generation (NLG)\Modules"
 
 # Traverse all subfolders in the module folder in sorted order
 for subfolder in sorted(os.listdir(module_folder)):
