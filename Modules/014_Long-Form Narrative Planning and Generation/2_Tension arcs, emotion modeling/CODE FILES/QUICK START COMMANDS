@@ -1,0 +1,17 @@
+# 1. CREATE FOLDER
+mkdir nlg_research_portfolio
+cd nlg_research_portfolio
+
+# 2. SAVE ALL 10 FILES (copy-paste above)
+
+# 3. RUN EVERYTHING
+python master_runner.py
+
+# 4. LAUNCH WEB APP
+python story_app.py
+
+# 5. GENERATE PAPER
+python research_paper_template.py
+
+# 6. UPLOAD TO GITHUB
+git init && git add . && git commit -m "NLP Research Portfolio" && git push

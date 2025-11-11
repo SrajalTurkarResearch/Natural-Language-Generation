@@ -1,0 +1,16 @@
+# 1. CREATE FOLDER
+mkdir real_world_nlg_projects
+cd real_world_nlg_projects
+
+# 2. SAVE ALL 8 FILES (copy above)
+
+# 3. RUN EVERYTHING
+python real_world_master.py
+
+# 4. PICK YOUR FAVORITE
+python headspace_therapy.py      # Interactive chatbot!
+python netflix_plot_summaries.py --title "Your Show"
+python story_app.py              # Web app!
+
+# 5. GITHUB + APPLY
+git init && git add . && git commit -m "Real-World NLG Portfolio" && git push
